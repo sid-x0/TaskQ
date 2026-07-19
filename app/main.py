@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.core.redis_client import redis_client
 
 app = FastAPI(
     title="TaskQ",
@@ -18,4 +19,13 @@ def root():
 def health():
     return {
         "status": "healthy"
+    }
+    
+@app.get("/redis-test")
+def redis_test():
+    redis_client.set("hello", "TaskQ")
+    value = redis_client.get("hello")
+
+    return {
+        "redis_value": value
     }
