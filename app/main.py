@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from app.core.redis_client import redis_client
+from app.api.routes import router
 
 app = FastAPI(
     title="TaskQ",
     description="A Celery-inspired distributed background job processing system",
     version="0.1.0"
 )
+
+
+app.include_router(router)
 
 
 @app.get("/")
