@@ -1,6 +1,8 @@
 import time
 
-from app.core.queue import dequeue_job, get_job
+from app.core.queue import dequeue_job, get_job, save_job
+from app.models.job import JobStatus
+from app.tasks.sleep import execute
 
 print(" Worker started...")
 
@@ -14,13 +16,20 @@ while True:
     job = get_job(job_id)
 
     if job is None:
-        print(f"Job {job_id} not found!")
         continue
+    
+    #mark as runnign
+    job.status = JobStatus.RUNNING
+    save_job(job)
+    
+    print(f"Executing job {job.id}...")
+    
+    if job.task_type == 'sleep':
+        execute(job.payload)
+        
+    #mark as completed
+    job.status = JobStatus.COMPLETED
+    save_job(job)
+    
+    print(f"Completed job {job.id}")
 
-    print("\n========================")
-    print(f"Received Job")
-    print(f"ID      : {job.id}")
-    print(f"Task    : {job.task_type}")
-    print(f"Payload : {job.payload}")
-    print(f"Status  : {job.status}")
-    print("========================\n")
