@@ -47,12 +47,11 @@ while True:
     except Exception as e:
         print(f"Job {job.id} failed : {e}")
         
-        #increase retry count
-        job.retry_count += 1
         
         #retry
-        if job.retry_count <= job.max_retries:
+        if job.retry_count < job.max_retries:
             
+            job.retry_count += 1
             job.status = JobStatus.RETRYING
             job.error_message = str(e)
             
