@@ -8,7 +8,7 @@ def save_job(job: JobResponse):
 
 
 def enqueue_job(job_id: str):
-    redis_client.rpush("job_queue", job_id)
+    redis_client.rpush("job_queue", str(job_id))
 
 
 def get_job(job_id: str) -> JobResponse | None:
@@ -24,3 +24,7 @@ def get_job(job_id: str) -> JobResponse | None:
 
 def dequeue_job():
     return redis_client.lpop("job_queue")
+
+def enqueue_dead_letter(job_id : str ):
+    redis_client.rpush("dead_letter_queue", str(job_id))
+    

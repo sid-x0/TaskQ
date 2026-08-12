@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 
-from app.core.queue import dequeue_job, get_job, save_job
+from app.core.queue import dequeue_job, get_job, save_job, enqueue_job, enqueue_dead_letter
 from app.models.job import JobStatus
 from app.tasks.sleep import execute
 
@@ -38,13 +38,48 @@ while True:
         #mark as completed
         job.status = JobStatus.COMPLETED
         job.completed_at = datetime.now()
+        
+        save_job(job)
     
         print(f"Completed job {job.id}")
+        
+        
     except Exception as e:
-        #task failed
-        job.status = JobStatus.FAILED
-        job.error_message = str(e)
+        print(f"Job {job.id} failed : {e}")
         
-        print(f"Jpb {job.id} failed: {e}")
+        #increase retry count
+        job.retry_count += 1
         
-    save_job(job)
+        #retry
+        if job.retry_count <= job.max_retries:
+            
+            job.status = JobStatus.RETRYING
+            job.error_message = str(e)
+            
+            save_job(job)
+            
+            delay = 2 **(job.retry_count - 1)
+            
+            print(
+                f"Retrying job {job.id} "
+                f"in {delay} sec"
+                f"(attempt {job.retry_count}/{job.max_retries})"
+            )
+            
+            time.sleep(delay)
+            
+            enqueue_job(job.id)
+            
+        else:
+            job.status = JobStatus.FAILED
+            job.error_message = str(e)
+            
+            save_job(job)
+            
+            enqueue_dead_letter(job.id)
+            
+            print(
+                f"Job {job.id} permamnently failed "
+                f"and moved to DLQ"
+            )
+        
