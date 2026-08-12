@@ -26,13 +26,25 @@ while True:
     
     print(f"▶ Executing job {job.id}...")
     
-    if job.task_type == 'sleep':
-        execute(job.payload)
-        
-    #mark as completed
-    job.status = JobStatus.COMPLETED
-    job.completed_at = datetime.now()
-    save_job(job)
+    try:
+        if job.task_type == 'sleep':
+            execute(job.payload)
+            
+        elif job.task_type == "fail":
+            from app.tasks.fail import execute as fail_task
+            fail_task(job.payload)
+            
+            
+        #mark as completed
+        job.status = JobStatus.COMPLETED
+        job.completed_at = datetime.now()
     
-    print(f"Completed job {job.id}")
-
+        print(f"Completed job {job.id}")
+    except Exception as e:
+        #task failed
+        job.status = JobStatus.FAILED
+        job.error_message = str(e)
+        
+        print(f"Jpb {job.id} failed: {e}")
+        
+    save_job(job)
