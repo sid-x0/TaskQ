@@ -4,3 +4,15 @@ services:
     container_name: taskq-redis
     ports:
       - "6379:6379"
+
+  
+  worker:
+    build: .
+    command: python -m app.workers.worker
+    depends_on:
+      - redis
+    
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
