@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 from uuid import uuid4
 
-from app.core.queue import save_job, enqueue_job, get_job
+from app.core.queue import save_job, enqueue_job, get_job, get_job_stats
 from app.models.job import JobStatus
 from app.models.schemas import JobCreate, JobResponse
 
@@ -49,4 +49,9 @@ def get_job_status(job_id: str):
         )
 
     return job
+
+
+@router.get("/stats")
+def get_stats():
+    return get_job_stats()
 

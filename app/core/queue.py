@@ -28,3 +28,25 @@ def dequeue_job():
 def enqueue_dead_letter(job_id : str ):
     redis_client.rpush("dead_letter_queue", str(job_id))
     
+    
+def get_job_stats():
+    keys = redis_client.keys("job:*")
+
+    stats = {
+        "pending": 0,
+        "running": 0,
+        "retrying": 0,
+        "completed": 0,
+        "failed": 0,
+    }
+
+    for key in keys:
+        job = get_job(key.split(":")[1])
+
+        if job:
+            stats[job.status.value] += 1
+
+    return stats
+
+
+    
