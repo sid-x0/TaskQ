@@ -1,13 +1,28 @@
 import time
 from datetime import datetime
 
-from app.core.queue import dequeue_job, get_job, save_job, enqueue_job, enqueue_dead_letter
+from app.core.queue import dequeue_job, get_job, save_job, enqueue_job, enqueue_dead_letter, heartbeat
 from app.models.job import JobStatus
 from app.tasks.sleep import execute
+import uuid
+
+worker_id = str( uuid.uuid4())
+
+def send_heartbeat():
+    while True:
+        heartbeat( worker_id )
+        time.sleep(5)
+        
+threading.thread(
+    target = send_heartbeat,
+    daemon = True
+).start()
 
 print(" Worker started...")
 
 while True:
+    
+    heartbeat( worker_id )
     job_id = dequeue_job()
 
     if job_id is None:

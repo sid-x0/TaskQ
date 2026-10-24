@@ -1,5 +1,6 @@
 from app.core.redis_client import redis_client
 from app.models.schemas import JobResponse
+import uuid
 
 
 def save_job(job: JobResponse):
@@ -48,5 +49,6 @@ def get_job_stats():
 
     return stats
 
-
+def heartbeat( worker_id: str ):
+    redis_client.set( f"worker: { worker_id }", "alive", ex = 10 )
     
